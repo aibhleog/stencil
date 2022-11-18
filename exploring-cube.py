@@ -26,7 +26,7 @@ __email__ = 'astro.hutchison@gmail.com'
 import numpy as np
 import astropy.io.fits as fits
 import matplotlib.pyplot as plt
-from highlight_colorbar import *
+from highlight_colorbar import * # written by TAH
 
 
 # setting path

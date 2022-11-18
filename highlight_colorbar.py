@@ -1,5 +1,7 @@
 '''
-These functions & class are used to make a color bar (and 2D coloring) that uses a specific colormap but then highlights a certain value & range with a different color.
+These functions & class are used to make a color bar (and 2D coloring) that 
+uses a specific colormap but then highlights a certain value & range with 
+a different color.
 
 '''
 

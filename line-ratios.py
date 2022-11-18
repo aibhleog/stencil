@@ -31,7 +31,7 @@ import matplotlib.pyplot as plt
 from matplotlib.colors import LogNorm
 import matplotlib.gridspec as gridspec
 import pandas as pd
-from fitting_ifu_spectra import *
+from fitting_ifu_spectra import * # written by TAH
 import json, sys
 # import warnings
 # warnings.filterwarnings("error")

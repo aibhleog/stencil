@@ -4,8 +4,9 @@ This is code I'm using to explore 1D spectroscopy part of the IFU cubes and gain
 Current goal:   plot a spectrum of S1723 from ONE of the spaxels
 
 
-NOTES:  the x1d.fits files are set up like recarrays
-
+NOTES:  The x1d.fits files are set up like recarrays -- also I didn't end up 
+        using them beccause they confused me...
+        
 '''
 
 __author__ = 'Taylor Hutchison'

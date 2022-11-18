@@ -1,6 +1,10 @@
 '''
 This is a quick & dirty way to pick most of the pixels out for the source.
 
+I've also written this up with other examples in its own repository:
+https://github.com/aibhleog/patches-pixels
+
+
 
 NOTES:
 
@@ -17,7 +21,7 @@ import numpy as np
 import astropy.io.fits as fits
 import matplotlib.pyplot as plt
 from matplotlib.patches import Ellipse
-from highlight_colorbar import *
+from highlight_colorbar import * # written by TAH
 
 
 # setting path

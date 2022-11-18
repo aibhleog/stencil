@@ -1,5 +1,7 @@
 '''
-This is going to be a very basic script (hopefully) where I fit a polynomial curve to the arc in S1723 so that I can get some pixel coordinates to plot.
+This is going to be a very basic script (hopefully) where I fit 
+a polynomial curve to the arc in S1723 so that I can get some 
+pixel coordinates to plot.
 
 '''
 
@@ -10,7 +12,7 @@ __email__ = 'astro.hutchison@gmail.com'
 import numpy as np
 import astropy.io.fits as fits
 import matplotlib.pyplot as plt
-from highlight_colorbar import *
+from highlight_colorbar import * # written by TAH
 
 
 # setting path
