@@ -1,5 +1,10 @@
 '''
-Basic script for just inspecting the spectrum of a galaxy.  Pulling one spaxel and looking around.
+Basic script for just inspecting the spectrum of a galaxy.  
+
+The commented out code below puls one spaxel and allows me to looking around.
+The code below that makes a 4-panel plot that pulls the spectra for 4 spaxels
+and then plots the 2D image slice on the left, with the locatin of the 
+chosen spaxels scatter plotted on top.
         
     
 

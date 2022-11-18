@@ -14,7 +14,7 @@ TODO:
     Get code working for SPT sources.  But also need to decide what to do
     with upper limits?  Cause it looks like neither see [SII]...
     
-    Would love to be able to -- 1) plot a 3" line
+    Would love to be able to -- 1) plot a 3" line on the 2D image
                                 2) maybe rotate the cube?
                                 3) plot wcs grid but no axis?        
     
