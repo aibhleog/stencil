@@ -1,3 +1,32 @@
+
+# TAH SPECIFIED THINGS
+# --------------------
+
+# subfolders that aren't plots-data
+lensed-galaxy-hack.py/
+Notebooks/
+Notebooks-dev/
+
+# ignoring plots-data, so will need to 
+# manually add the files from in there that
+# I want to keep
+plots-data/
+
+# files I want it to ignore
+jwst-pipeline.yml
+.DS_Store
+plots-data/.DS_Store
+talk-abstract-stsci-dec22.txt
+BW-reduction-spt0418.txt
+testing.py
+fit_Ha2.pro
+grism_fit_spectra_vy.py
+
+
+# --------------------
+
+
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
