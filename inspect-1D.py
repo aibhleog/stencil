@@ -2,11 +2,20 @@
 Basic script for just inspecting the spectrum of a galaxy.  
 
 The commented out code below puls one spaxel and allows me to looking around.
+
 The code below that makes a 4-panel plot that pulls the spectra for 4 spaxels
 and then plots the 2D image slice on the left, with the locatin of the 
 chosen spaxels scatter plotted on top.
         
     
+TODO:
+
+    current playing with fitting the [SII] doublet in the SPT0418 data.
+    trying to figure out how to make a double gaussian peak, this may help:
+    -- https://specutils.readthedocs.io/en/stable/fitting.html#double-peak-fit-two-separate-peaks-with-two-windows
+    maybe this too
+    -- https://github.com/astropy/past-astropy-workshops/blob/master/aas_233_workshop/09b-Specutils/Specutils_analysis.ipynb
+
 
 '''
 
@@ -28,7 +37,9 @@ import json, sys
 
 # specify which galaxy
 # --------------------
-target = 'SGAS1723'
+target = 'SPT0418'
+
+saveit = False # save the figure?
 
 
 
@@ -61,7 +72,7 @@ except KeyError:
 name,filename = galaxy['name'],galaxy['filename']
 
 scale,z = galaxy['scale'], galaxy['z']
-x,y = 16,33#galaxy['x,y']
+x,y = galaxy['x,y']
 
 # continuum-subtracted cube
 data, header = fits.getdata(path+f'{name}/{filename}', header=True) 
@@ -87,52 +98,70 @@ spec = pd.DataFrame({'wave':wave,'flux':dat,'ferr':err})
 spec = convert_MJy_cgs(spec.copy())
 
 
-# # window range
-# window = [(wavemin*u.um,(spec.wave.mean()-0.0007)*u.um),
-#           ((spec.wave.mean()+0.0007)*u.um,wavemax*u.um)]
 
-# exclude = []
-# if len(line['exclude']) > 0:
-#     for win_range in line['exclude']:
-#         win_range = [i*u.um for i in win_range]
-#         exclude.append(win_range)
-# else: exclude = None
+# smoothing spectrum
+spec['smoothed'] = sm.smooth(spec.flux,window_len=5)
 
-# spec = fitting_continuum_1D(spec.copy(),window=window,exclude=exclude)
+
+# fitting line
+line = galaxy['lines']['sii']
+
+lspec = spec_wave_range(spec.copy(),line['wave_range'])
+lspec['flux'] = lspec.smoothed
+
+spectrum = make_spectrum(lspec,line['wave_range'])
+
+cgs = u.erg * u.cm**-2 * u.s**-1 * u.AA**-1
+x0_1, x0_2 = line['x0']
+
+# setting up a Gaussian model with my initial guesses
+g1_init = models.Gaussian1D(amplitude = x0_1[0] * cgs, 
+                           mean = x0_1[1] * u.um, 
+                           stddev = x0_1[2] * u.um)
+
+g2_init = models.Gaussian1D(amplitude = x0_2[0] * cgs, 
+                           mean = x0_2[1] * u.um, 
+                           stddev = x0_2[2] * u.um)
+
+# fitting the line
+g_fit = fit_lines(spectrum, g1_init)
+y_fit = g_fit(spectrum.spectral_axis)
+
+
+
+
 
 
 # plotting
 # --------
-
-# smoothing spectrum
-smoothed = sm.smooth(spec.flux,window_len=5)
+onepix = header['CDELT3'] # the wavelength step of one pixel
 
 
-# plt.figure(figsize=(7,5))
+plt.figure(figsize=(7,5))
 
-# plt.step(spec.wave,spec.flux/scale,where='mid')
-# plt.step(spec.wave,smoothed/scale,where='mid',color='k')
-# # plt.step(spec.wave,spec.cont_sub/scale,where='mid',color='k')
+plt.step(spec.wave,spec.flux/scale,where='mid')
+plt.step(spec.wave,spec.smoothed/scale,where='mid',color='k')
 
-# # plt.plot(spec.wave,spec.cont/scale)
-# plt.plot(spec.wave,np.zeros(len(spec)),color='k')
-
-# for l in [.654981,.65628,.658523,.6717,.6731,.726276,.90686,.95311]:
-#     plt.axvline(l*(1+z),color='k',ls=':')
-
-# # plt.axvspan(spec.wave.values[3],spec.wave.values[-3],alpha=0.2)
-# # plt.axvspan(1.1635,1.1647,alpha=0.4)
-
-# plt.xlim(4.7,5.02)
-# plt.ylim(-0.05,0.1)
+for l in [.654981,.65628,.658523,.6717,.6731,.726276,.90686,.95311]:
+    plt.axvline(l*(1+z)+onepix,color='k',ls=':')
+    
+plt.step(lspec.wave,lspec.flux/scale,where='mid')
+plt.step(lspec.wave,y_fit/scale,where='mid',color='g')
 
 
-# plt.tight_layout()
-# plt.show()
-# plt.close('all')
+plt.xlim(3.35,3.7)
+plt.ylim(0,0.6)
+# plt.ylim(-0.05,0.2)
 
 
-# sys.exit(0)
+plt.tight_layout()
+plt.show()
+plt.close('all')
+
+
+sys.exit(0) # to stop here and not continue
+
+
 
 
 # EXPANDING TO LOOK AT A NUMBER OF SPECTRA
@@ -245,7 +274,7 @@ for x,y in pixels:
     
     
 plt.tight_layout()
-plt.savefig(f'plots-data/{name}-various1D.pdf')
+if saveit == True: plt.savefig(f'plots-data/{name}-various1D.pdf')
 plt.show()
 plt.close('all')
 
