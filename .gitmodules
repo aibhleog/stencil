@@ -1,0 +1,3 @@
+[submodule "plots-data"]
+	path = plots-data
+	url = https://github.com/aibhleog/secret-stencil.git

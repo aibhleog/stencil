@@ -10,7 +10,7 @@ Notebooks-dev/
 # ignoring plots-data, so will need to 
 # manually add the files from in there that
 # I want to keep
-plots-data/
+#plots-data/
 
 # files I want it to ignore
 jwst-pipeline.yml
