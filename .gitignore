@@ -2,6 +2,12 @@
 # TAH SPECIFIED THINGS
 # --------------------
 
+# honestly... I hate the "untracked files" list... gonna
+# just block everything for now; anything I want to add
+# I'll just do git add -f [file]
+*
+
+
 # subfolders that aren't plots-data
 lensed-galaxy-hack.py/
 Notebooks/
