@@ -37,47 +37,33 @@ import json, sys
 
 # specify which galaxy
 # --------------------
-target = 'SPT0418'
+target = 'SGAS1723'
 
 saveit = False # save the figure?
 
 
 
-# ---------------------- #
-# reading in galaxy info #
-# ---------------------- #
-
-# reading in file that has all of the galaxy values
-with open('plots-data/galaxies.txt') as f:
-    data = f.read()
-
-# reconstructing dictionary
-galaxies = json.loads(data)
-path = galaxies['path']
-
-# double-checking names are right for dictionary
-try: galaxy = galaxies[target]
-except KeyError: 
-    print(f'The available targets are: {list(galaxies.keys())[1:]}')
-    sys.exit(0) # exiting script
-
-# ---------------------- #
-# ---------------------- #
+# returns dictionary of info for chosen galaxy
+# also path to reduced FITS cubes
+galaxy, path, grating = get_galaxy_info(target)
 
 
 
 
 # defining some values
 # --------------------
-name,filename = galaxy['name'],galaxy['filename']
+name,filename = galaxy['name'],galaxy['grating'][grating]['filename']
 
-scale,z = galaxy['scale'], galaxy['z']
-x,y = galaxy['x,y']
+scale,z = galaxy['grating'][grating]['scale'], galaxy['z']
+x,y = galaxy['grating'][grating]['x,y']
 
-# continuum-subtracted cube
+# reduced cube
 data, header = fits.getdata(path+f'{name}/{filename}', header=True) 
 error = fits.getdata(path+f'{name}/{filename}',ext=2) 
 
+# sigma clipped cube BY LAYERS
+# data, header = fits.getdata(f'plots-data/test-{name}-sigmaclipped-s3d-{grating}.fits', header=True) 
+# error = fits.getdata(f'plots-data/test-{name}-sigmaclipped-s3d-{grating}.fits',ext=2) 
 
 
 
@@ -89,77 +75,77 @@ wave = np.arange(header['CRVAL3'],
 
 
 
-# pulling spectrum
-# doing it this way to circumvent the Big Endian pandas error
-dat = [float(f) for f in data[:,int(y),int(x)].copy()]
-err = [float(f) for f in error[:,int(y),int(x)].copy()]
+# # pulling spectrum
+# # doing it this way to circumvent the Big Endian pandas error
+# dat = [float(f) for f in data[:,int(y),int(x)].copy()]
+# err = [float(f) for f in error[:,int(y),int(x)].copy()]
 
-spec = pd.DataFrame({'wave':wave,'flux':dat,'ferr':err})
-spec = convert_MJy_cgs(spec.copy())
-
-
-
-# smoothing spectrum
-spec['smoothed'] = sm.smooth(spec.flux,window_len=5)
+# spec = pd.DataFrame({'wave':wave,'flux':dat,'ferr':err})
+# spec = convert_MJy_cgs(spec.copy())
 
 
-# fitting line
-line = galaxy['lines']['sii']
 
-lspec = spec_wave_range(spec.copy(),line['wave_range'])
-lspec['flux'] = lspec.smoothed
-
-spectrum = make_spectrum(lspec,line['wave_range'])
-
-cgs = u.erg * u.cm**-2 * u.s**-1 * u.AA**-1
-x0_1, x0_2 = line['x0']
-
-# setting up a Gaussian model with my initial guesses
-g1_init = models.Gaussian1D(amplitude = x0_1[0] * cgs, 
-                           mean = x0_1[1] * u.um, 
-                           stddev = x0_1[2] * u.um)
-
-g2_init = models.Gaussian1D(amplitude = x0_2[0] * cgs, 
-                           mean = x0_2[1] * u.um, 
-                           stddev = x0_2[2] * u.um)
-
-# fitting the line
-g_fit = fit_lines(spectrum, g1_init)
-y_fit = g_fit(spectrum.spectral_axis)
+# # smoothing spectrum
+# spec['smoothed'] = sm.smooth(spec.flux,window_len=5)
 
 
+# # fitting line
+# line = galaxy['grating'][grating]['lines']['sii']
+
+# lspec = spec_wave_range(spec.copy(),line['wave_range'])
+# lspec['flux'] = lspec.smoothed
+
+# spectrum = make_spectrum(lspec,line['wave_range'])
+
+# cgs = u.erg * u.cm**-2 * u.s**-1 * u.AA**-1
+# x0_1, x0_2 = line['x0']
+
+# # setting up a Gaussian model with my initial guesses
+# g1_init = models.Gaussian1D(amplitude = x0_1[0] * cgs, 
+#                            mean = x0_1[1] * u.um, 
+#                            stddev = x0_1[2] * u.um)
+
+# g2_init = models.Gaussian1D(amplitude = x0_2[0] * cgs, 
+#                            mean = x0_2[1] * u.um, 
+#                            stddev = x0_2[2] * u.um)
+
+# # fitting the line
+# g_fit = fit_lines(spectrum, g1_init)
+# y_fit = g_fit(spectrum.spectral_axis)
 
 
 
 
-# plotting
-# --------
-onepix = header['CDELT3'] # the wavelength step of one pixel
 
 
-plt.figure(figsize=(7,5))
+# # plotting
+# # --------
+# onepix = header['CDELT3'] # the wavelength step of one pixel
 
-plt.step(spec.wave,spec.flux/scale,where='mid')
-plt.step(spec.wave,spec.smoothed/scale,where='mid',color='k')
 
-for l in [.654981,.65628,.658523,.6717,.6731,.726276,.90686,.95311]:
-    plt.axvline(l*(1+z)+onepix,color='k',ls=':')
+# plt.figure(figsize=(7,5))
+
+# plt.step(spec.wave,spec.flux/scale,where='mid')
+# plt.step(spec.wave,spec.smoothed/scale,where='mid',color='k')
+
+# for l in [.654981,.65628,.658523,.6717,.6731,.726276,.90686,.95311]:
+#     plt.axvline(l*(1+z)+onepix,color='k',ls=':')
     
-plt.step(lspec.wave,lspec.flux/scale,where='mid')
-plt.step(lspec.wave,y_fit/scale,where='mid',color='g')
+# plt.step(lspec.wave,lspec.flux/scale,where='mid')
+# plt.step(lspec.wave,y_fit/scale,where='mid',color='g')
 
 
-plt.xlim(3.35,3.7)
-plt.ylim(0,0.6)
-# plt.ylim(-0.05,0.2)
+# plt.xlim(3.35,3.7)
+# plt.ylim(0,0.6)
+# # plt.ylim(-0.05,0.2)
 
 
-plt.tight_layout()
-plt.show()
-plt.close('all')
+# plt.tight_layout()
+# plt.show()
+# plt.close('all')
 
 
-sys.exit(0) # to stop here and not continue
+# sys.exit(0) # to stop here and not continue
 
 
 
@@ -182,12 +168,12 @@ gsR = gridspec.GridSpecFromSubplotSpec(4,1,subplot_spec=gs0[1],
 
 
 # plotting an image of the galaxy, centered around Halpha
-image = data[galaxy['slice']].copy()
+image = data[galaxy['grating'][grating]['slice']].copy()
 image[image == 0] = np.nan # to remove non-IFU areas
 
 ax_image = plt.subplot(gsL[1])
 
-ax_image.imshow(image,origin='lower',clim=(-0.01,0.035))
+ax_image.imshow(image,origin='lower',clim=(-1,3.5))
 ax_image.axis('off')
 
 
@@ -206,7 +192,7 @@ elif target == 'SPT2147':
 for x,y in pixels:
     
     # adding pixel point to image plot
-    ax_image.scatter(x,y,marker='o',s=60,color=colors[count],edgecolor='k')
+    # ax_image.scatter(x,y,marker='o',s=60,color=colors[count],edgecolor='k')
     
     
     # spectra
@@ -274,7 +260,7 @@ for x,y in pixels:
     
     
 plt.tight_layout()
-if saveit == True: plt.savefig(f'plots-data/{name}-various1D.pdf')
+# if saveit == True: plt.savefig(f'plots-data/{name}-various1D.pdf')
 plt.show()
 plt.close('all')
 

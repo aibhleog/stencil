@@ -6,7 +6,10 @@ The functions within this module each have summaries within them of the
 inputs required (and optional) and then what the function outputs.
 
 
-Last updated:  Nov 2022
+Last updated:  Jan 2023
+-- fixed conversion function first convert from MJy/sr --> MJy
+   (had incorrectly assumed spectra were already in MJy)
+
 
 '''
 
@@ -29,8 +32,91 @@ from specutils.fitting.continuum import fit_continuum
 
 import matplotlib.pyplot as plt
 import pandas as pd
+import astropy.io.fits as fits
+import sys,json
 
 
+def get_galaxy_info(target,grat='g140h'):
+    # reading in file that has all of the galaxy values
+    with open('plots-data/galaxies.txt') as f:
+        data = f.read()
+
+    # reconstructing dictionary
+    galaxies = json.loads(data)
+    path = galaxies['path']
+
+    # double-checking names are right for dictionary
+    try: 
+        galaxy = galaxies[target] # getting galaxy info
+        gratings = list(galaxy['grating'].keys()) # listing gratings used
+        
+        # chosing grating for SGAS sources
+        if len(gratings) > 1: gratings = grat
+        else: gratings = gratings[0]
+        
+        return galaxy,path,gratings
+    
+    except KeyError: 
+        print(f'The available targets are: {list(galaxies.keys())[1:]}')
+        sys.exit(0) # exiting script
+
+        
+
+def get_mask(galaxy,array_2d=False,layers=False):
+    '''
+    INPUTS:
+    >> galaxy -------- the name of the galaxy mask I want
+    
+    OUTPUTS:
+    >> coordinates --- a list of coordinates from the mask,
+                       specifying where the galaxy light is
+    '''
+    # just the full galaxy mask
+    if layers == False:
+        try:
+            galaxy_mask = fits.getdata(f'plots-data/{galaxy}-mask.fits')
+
+            # makings a list of coordinates
+            coordinates = list(zip(*np.where(galaxy_mask == 1)))
+
+            if array_2d == False: return coordinates
+            else: return galaxy_mask
+
+        except:
+            print("\nWrong file and/or file doesn't exist yet.",end='\n\n')
+            sys.exit(0) # kills script
+
+            
+    # want the mask slices instead
+    # note that the first slice is the full galaxy mask
+    else:
+        try:
+            galaxy_mask = fits.getdata(f'plots-data/{galaxy}-mask-layers.fits')
+            mask_layers_info = np.loadtxt(f'plots-data/{galaxy}-mask-layers.txt',delimiter='\t')
+            
+            mask_layers = []
+            
+            with fits.open(f'plots-data/{galaxy}-mask-layers.fits') as hdul:
+                for i in range(len(hdul)):
+                    # map layer
+                    galaxy_mask = hdul[i].data
+
+                    # makings a list of coordinates
+                    coordinates = list(zip(*np.where(galaxy_mask == 1)))
+
+                    if array_2d == False: mask_layers.append(coordinates)
+                    else: mask_layers.append(galaxy_mask)
+                
+            return mask_layers, mask_layers_info
+                
+
+        except:
+            print("\nWrong layers file and/or file doesn't exist yet.",end='\n\n')
+            sys.exit(0) # kills script
+        
+
+        
+        
 def spec_wave_range(spec,wave_range,index=False):
     '''
     INPUTS:
@@ -96,14 +182,34 @@ def make_spectrum(spec,wave_range=False,contsub=False):
     return spectrum
 
 
+
+def convert_MJy_sr_to_MJy(spec):
+    '''
+    The spectra from the reduced data are in MJy/sr.
+    Converting to MJy so they can be converted to cgs units.
+    
+    INPUTS:
+    >> spec  --------  a pandas dataframe set up with columns
+                       "wave", "flux", "ferr"
+                       
+    OUTPUTS:
+    >> spec ---------  the same pandas dataframe but in MJy    
+    '''
+    # taking nominal pixel area from FITS header for data
+    pix_area = 2.35040007004737E-13 # in steradians
+    
+    # converting spectrum flux 
+    spec['flux'] *= pix_area # MJy/sr --> MJy
+
+    # converting spectrum error
+    spec['ferr'] *= pix_area # MJy/sr --> MJy
+    
+    return spec.copy()
+    
+
+
 def convert_MJy_cgs(spec):
     '''
-    *** NOTE ****
-    
-        NEED TO CONVERT FROM MJY/SR TO CGS NOT MJY, UPDATE
-    
-    *************
-    
     INPUTS:
     >> spec  --------  a pandas dataframe set up with columns
                        "wave", "flux", "ferr"; assumes wave is 
@@ -111,11 +217,16 @@ def convert_MJy_cgs(spec):
     OUTPUTS:
     >> spec ---------  the same pandas dataframe but in cgs
     '''
-    # converting spectrum flux to cgs units first
+    # converting from MJy/sr to MJy
+    spec = convert_MJy_sr_to_MJy(spec.copy()) 
+    
+    # converting spectrum flux to cgs units
+    spec['flux'] *= 1e6 # MJy --> Jy
     spec['flux'] *= 1e-23 # Jy --> erg/s/cm/Hz (fnu)
     spec['flux'] *= 2.998e14 / (spec.wave.values)**2 # fnu --> flam
-
-    # converting spectrum error to cgs units first
+    
+    # converting spectrum error to cgs units
+    spec['ferr'] *= 1e6 # MJy --> Jy
     spec['ferr'] *= 1e-23 # Jy --> erg/s/cm/Hz (fnu)
     spec['ferr'] *= 2.998e14 / (spec.wave.values)**2 # fnu --> flam
     
