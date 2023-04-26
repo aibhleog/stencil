@@ -32,14 +32,15 @@ import matplotlib.patheffects as PathEffects
 import pandas as pd
 from fitting_ifu_spectra import * # written by TAH
 import smoothing as sm # written by TAH
+import add_lines # written by TAH
 import json, sys
 
 
 # specify which galaxy
 # --------------------
-target = 'SGAS1723'
+target = 'SPT2147'
 
-saveit = False # save the figure?
+saveit = True # save the figure?
 
 
 
@@ -86,7 +87,7 @@ wave = np.arange(header['CRVAL3'],
 
 
 # # smoothing spectrum
-# spec['smoothed'] = sm.smooth(spec.flux,window_len=5)
+# spec['smoothed'] = sm.smooth(spec.flam,window_len=5)
 
 
 # # fitting line
@@ -125,13 +126,13 @@ wave = np.arange(header['CRVAL3'],
 
 # plt.figure(figsize=(7,5))
 
-# plt.step(spec.wave,spec.flux/scale,where='mid')
+# plt.step(spec.wave,spec.flam/scale,where='mid')
 # plt.step(spec.wave,spec.smoothed/scale,where='mid',color='k')
 
 # for l in [.654981,.65628,.658523,.6717,.6731,.726276,.90686,.95311]:
 #     plt.axvline(l*(1+z)+onepix,color='k',ls=':')
     
-# plt.step(lspec.wave,lspec.flux/scale,where='mid')
+# plt.step(lspec.wave,lspec.flam/scale,where='mid')
 # plt.step(lspec.wave,y_fit/scale,where='mid',color='g')
 
 
@@ -155,8 +156,8 @@ wave = np.arange(header['CRVAL3'],
 
 count = 0
 
-plt.figure(figsize=(12,8))
-gs0 = gridspec.GridSpec(1,2,width_ratios=[1,2])
+plt.figure(figsize=(15,8))
+gs0 = gridspec.GridSpec(1,2,width_ratios=[1.95,2])
 
 
 gsL = gridspec.GridSpecFromSubplotSpec(3,1,subplot_spec=gs0[0],
@@ -168,12 +169,12 @@ gsR = gridspec.GridSpecFromSubplotSpec(4,1,subplot_spec=gs0[1],
 
 
 # plotting an image of the galaxy, centered around Halpha
-image = data[galaxy['grating'][grating]['slice']].copy()
+image = data[galaxy['grating'][grating]['slice']-1].copy()
 image[image == 0] = np.nan # to remove non-IFU areas
 
 ax_image = plt.subplot(gsL[1])
 
-ax_image.imshow(image,origin='lower',clim=(-1,3.5))
+ax_image.imshow(image,origin='lower',clim=(-1,3.5),cmap='viridis')
 ax_image.axis('off')
 
 
@@ -188,11 +189,14 @@ elif target == 'SPT2147':
     pixels = [[14,25],[18,26],[29,10],[39,29]]
     
 
+    
+scale /= 1e3 
+
 
 for x,y in pixels:
     
     # adding pixel point to image plot
-    # ax_image.scatter(x,y,marker='o',s=60,color=colors[count],edgecolor='k')
+    ax_image.scatter(x,y,marker='o',s=200,color=colors[count],edgecolor='k',lw=3)
     
     
     # spectra
@@ -203,22 +207,22 @@ for x,y in pixels:
     dat = [float(f) for f in data[:,int(y),int(x)].copy()]
     err = [float(f) for f in error[:,int(y),int(x)].copy()]
 
-    spec = pd.DataFrame({'wave':wave,'flux':dat,'ferr':err})
+    spec = pd.DataFrame({'wave':wave,'flam':dat,'flamerr':err})
     spec = convert_MJy_cgs(spec.copy())
 
     
     # smoothing spectrum
-    smoothed = sm.smooth(spec.flux,window_len=5)
+    smoothed = sm.smooth(spec.flam,window_len=5)
     
     
     # plotting
     # --------
-    txt = ax.text(0.977,0.83,f"spaxel ({x},{y})",transform=ax.transAxes,fontsize=15,ha='right',color='k')
-    txt.set_path_effects([PathEffects.withStroke(linewidth=2, foreground=colors[count])])
+    # txt = ax.text(0.977,0.83,f"spaxel ({x},{y})",transform=ax.transAxes,fontsize=15,ha='right',color='k')
+    # txt.set_path_effects([PathEffects.withStroke(linewidth=2, foreground=colors[count])])
     
     
-    ax.step(spec.wave,spec.flux/scale,where='mid',color=colors[count])
-    ax.step(spec.wave,smoothed/scale,where='mid',color='k',lw=2)
+    ax.step(spec.wave,spec.flam/scale,where='mid',color=colors[count],lw=4)
+    ax.step(spec.wave,smoothed/scale,where='mid',color='k',lw=2.5)
     
     
     if target == 'SGAS1723':
@@ -229,22 +233,29 @@ for x,y in pixels:
         # ax.set_xlim(1.1,1.2)
         # ax.set_xlim(1.45,1.6)
         ax.set_ylim(-0.2,2.3)
+        ax.set_yticklabels([])
     
     elif target == 'SPT0418':
         for l in [.654981,.65628,.658523,.6717,.6731,.90686,.95311]:
             ax.axvline(l*(1+z),color='k',ls=':')
         
-        ax.set_xlim(3.3,3.6)
-        ax.set_ylim(-0.02,0.24)
+        ax.set_xlim(3.36,3.55)
+        ax.set_ylim(-0.2,2.4)
+        ax.set_yticklabels([])
         
     elif target == 'SPT2147':
         for l in [.654981,.65628,.658523,.6717,.6731,.90686,.95311]:
             ax.axvline(l*(1+z),color='k',ls=':')
         
-        ax.set_xlim(3,3.3)
-        ax.set_ylim(-0.02,0.36)
+        ax.set_xlim(3.05,3.23)
+        ax.set_ylim(-0.2,3.6)
+        ax.set_yticklabels([])
         
         
+    # adding lines  
+    if count == 1:
+        add_lines.draw_lines(ax,2.5,z,xlim=['nii1','sii'],xo=12,
+                             fontsize=13,alpha=0.8)
         
     if count != 3:
         ax.set_xticklabels([])
@@ -252,15 +263,16 @@ for x,y in pixels:
         ax.set_xlabel('observed wavelength [microns]')
         
     if count == 2:
-        ax.set_ylabel('\t\t\tflux [10$^{%s}$ erg/s/cm$^2$/$\AA$]' 
-                      %round(np.log10(scale),2), labelpad=5)
+        # ax.set_ylabel('\t\t\tflux density [10$^{%s}$ erg/s/cm$^2$/$\AA$]' 
+                      # %round(np.log10(scale)), labelpad=5)
+        ax.set_ylabel('\t\t\tflux density [erg/s/cm$^2$/$\AA$]', labelpad=5)
     
     count += 1
     
     
     
 plt.tight_layout()
-# if saveit == True: plt.savefig(f'plots-data/{name}-various1D.pdf')
+if saveit == True: plt.savefig(f'plots-data/{name}-various1D.pdf')
 plt.show()
 plt.close('all')
 
