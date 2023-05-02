@@ -1,13 +1,12 @@
 '''
 
-Playing around with sigma clipping the cubes to do a final removal of the cosmic rays.  Will replace the clipped pixels with median value?
+Part 3 in sigma clipping routine
+---------------------------------
 
+This script is modest & straightforward.  The two separate clipped pieces
+(the "bkgd"/not-galaxy cube and the layer-clipped galaxy cube) are pieced
+together to make the final layered sigma clipped cube to be used for science.
 
-NOTES:
-    
-    THERE IS STILL SOME UPDATING NEEDED, SOME PIXELS AREN'T PROPERLY
-    REPLACING THE VALUES.  Overall, though, it does work!!
-    
 
 '''
 
@@ -16,7 +15,6 @@ __email__ = 'astro.hutchison@gmail.com'
 
 import time
 import matplotlib.pyplot as plt
-from matplotlib.colors import LogNorm
 import matplotlib.gridspec as gridspec
 from fitting_ifu_spectra import * # written by TAH
 
@@ -30,7 +28,7 @@ saveit = True # True or False
 
 # returns dictionary of info for chosen galaxy
 # also path to reduced FITS cubes
-galaxy, path, grating = get_galaxy_info(target)#,grat='g395h')
+galaxy, path, grating = get_galaxy_info(target,grat='g395h')
 
 
 # since updated pmap:
@@ -47,28 +45,21 @@ scale,z = galaxy['grating'][grating]['scale']/pmap_scale, galaxy['z']
 sli = galaxy['grating'][grating]['slice'] 
 
 
-
-# cube
-data, header = fits.getdata(path+f'{name}/{filename}', header=True) 
-
 # getting mask
 mask = get_mask(name,array_2d=True)
 
 
 
 # reading in both bkgd clipped & galaxy clipped
-# will add error next
-# bkgd = fits.getdata(f'plots-data/test-{name}-sigmaclipped-s3d-bkgd-{grating}.fits')
-# bkgd_err = fits.getdata(f'plots-data/test-{name}-sigmaclipped-s3d-bkgd-{grating}.fits',ext=2)
-# gal = fits.getdata(f'plots-data/test-{name}-sigmaclipped-s3d-galaxy-{grating}.fits')
-# gal_err = fits.getdata(f'plots-data/test-{name}-sigmaclipped-s3d-galaxy-{grating}.fits',ext=2)
+# --(yes this seems a tedious way to read them in, but I'm lazy and this was faster)
+pieces_path = 'plots-data/data-reduction/sigma-clipping-pieces/'
 
-bkgd = fits.getdata(f'plots-data/testing-{name}-bkgd-{grating}.fits')
-bkgd_err = fits.getdata(f'plots-data/testing-{name}-bkgd-{grating}.fits',ext=2)
-bkgd_clipped = fits.getdata(f'plots-data/testing-{name}-bkgd-{grating}.fits',ext=3)
-gal = fits.getdata(f'plots-data/testing-{name}-galaxy-{grating}.fits')
-gal_err = fits.getdata(f'plots-data/testing-{name}-galaxy-{grating}.fits',ext=2)
-gal_clipped = fits.getdata(f'plots-data/testing-{name}-galaxy-{grating}.fits',ext=3)
+bkgd = fits.getdata(f'{pieces_path}/{name}-sigmaclipping-bkgd-{grating}-s3d.fits')
+bkgd_err = fits.getdata(f'{pieces_path}/{name}-sigmaclipping-bkgd-{grating}-s3d.fits',ext=2)
+bkgd_clipped = fits.getdata(f'{pieces_path}/{name}-sigmaclipping-bkgd-{grating}-s3d.fits',ext=3)
+gal = fits.getdata(f'{pieces_path}/{name}-sigmaclipping-galaxy-{grating}-s3d.fits')
+gal_err = fits.getdata(f'{pieces_path}/{name}-sigmaclipping-galaxy-{grating}-s3d.fits',ext=2)
+gal_clipped = fits.getdata(f'{pieces_path}/{name}-sigmaclipping-galaxy-{grating}-s3d.fits',ext=3)
 
 
 # setting up final cubes
@@ -123,6 +114,9 @@ plt.figure(figsize=(12,6))
 gs = gridspec.GridSpec(1,3,width_ratios=[1,1,1],wspace=0)
 
 
+# original data cube straight from the pipeline
+data,header = fits.getdata(path+f'{name}/{filename}',header=True)
+
 ax = plt.subplot(gs[0])
 ax.set_title('original slice')
 ax.imshow(data[sli],clim=(-5e-3*pmap_scale,5e-2*pmap_scale),origin='lower',
@@ -132,6 +126,7 @@ ax.set_yticklabels([])
 ax.set_xticklabels([])
 
 
+# slice from final sigma clipped cube
 ax = plt.subplot(gs[1])
 ax.set_title('layered sigma clipped slice')
 ax.imshow(final_clipped[sli],clim=(-5e-3*pmap_scale,5e-2*pmap_scale),origin='lower',
@@ -141,9 +136,13 @@ ax.set_yticklabels([])
 ax.set_xticklabels([])
 
 
+# slice from clipping pixel tracker
 ax = plt.subplot(gs[2])
 ax.set_title('pixels clipped in slice')
-ax.imshow(clipped_pixels[sli],origin='lower',cmap='Blues')
+ax.imshow(mask,origin='lower',cmap='Greys',zorder=0,alpha=0.3)
+ax.imshow(clipped_pixels[sli],origin='lower',cmap='Blues',alpha=0.5)
+ax.text(0.047,0.927,'galaxy mask',color='grey',transform=ax.transAxes,fontsize=13)
+ax.text(0.047,0.87,'clipped pixel',color='C0',transform=ax.transAxes,fontsize=13,alpha=0.8)
 
 ax.set_yticklabels([])
 ax.set_xticklabels([])
@@ -191,8 +190,7 @@ if saveit == True:
     hdu2 = fits.ImageHDU(final_clipped_error,header=header) # the error cube
     hdu3 = fits.ImageHDU(clipped_pixels,header=header) # the clipped pixel tracker
     hdul = fits.HDUList([hdu, hdu1, hdu2, hdu3])
-    hdul.writeto(f'plots-data/testing-{name}-{grating}.fits',overwrite=True)
-    # hdul.writeto(f'plots-data/test-{name}-sigmaclipped-s3d-{grating}.fits',overwrite=True)
+    hdul.writeto(f'plots-data/{name}-sigmaclipped-{grating}-s3d.fits',overwrite=True)
     print('\nsigma clipped FITS cube saved.  Exiting script...',end='\n\n')
     
     

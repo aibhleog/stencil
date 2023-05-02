@@ -1,15 +1,10 @@
 '''
 
-Playing around with sigma clipping the cubes to do a final removal of the cosmic rays.  Will replace the clipped pixels with median value?
+Part 1 in sigma clipping routine
+---------------------------------
 
-
-NOTES:
-    
-    Runs on just the background spaxels, saves that way as well.
-    Will piece this together with one that was just focused on the 
-    galaxy spaxels to make a final, better-clipped cube
-    
-    For SPT0418, some negative things aren't clipped but should've been?
+Sigma clipping on the not-galaxy spaxels.  This script effectively runs like regular sigma clipping.
+However, the galaxy spaxels are first masked out.
 
 
 '''
@@ -19,7 +14,6 @@ __email__ = 'astro.hutchison@gmail.com'
 
 import time
 import matplotlib.pyplot as plt
-from matplotlib.colors import LogNorm
 import matplotlib.gridspec as gridspec
 from fitting_ifu_spectra import * # written by TAH
 
@@ -34,7 +28,7 @@ sigma = 5
 
 # returns dictionary of info for chosen galaxy
 # also path to reduced FITS cubes
-galaxy, path, grating = get_galaxy_info(target)#,grat='g395h')
+galaxy, path, grating = get_galaxy_info(target,grat='g395h')
 
 
 # since updated pmap:
@@ -343,13 +337,14 @@ plt.close('all')
 # using the header from the reduced s3d cube to preserve WCS & wavelength
 # -----------------------------
 if saveit == True:
+    pieces_path = 'plots-data/data-reduction/sigma-clipping-pieces/'
+    
     hdu = fits.PrimaryHDU(header=header)
     hdu1 = fits.ImageHDU(data_clipped,header=header) # the data cube
     hdu2 = fits.ImageHDU(error_clipped,header=header) # the error cube
     hdu3 = fits.ImageHDU(clipped_pixels,header=header) # the clipped pixels logging
     hdul = fits.HDUList([hdu, hdu1, hdu2, hdu3])
-    hdul.writeto(f'plots-data/testing-{name}-bkgd-{grating}.fits',overwrite=True)
-    # hdul.writeto(f'plots-data/test-{name}-sigmaclipped-s3d-bkgd-{grating}.fits',overwrite=True)
+    hdul.writeto(f'{pieces_path}/{name}-sigmaclipping-bkgd-{grating}-s3d.fits',overwrite=True)
     print('\nsigma clipped FITS cube saved.  Exiting script...',end='\n\n')
     
     

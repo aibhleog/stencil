@@ -1,12 +1,20 @@
 '''
 
-Playing around with sigma clipping the cubes to do a final removal of the cosmic rays.  Will replace the clipped pixels with median value?
+Part 2 in sigma clipping routine
+---------------------------------
+
+Sigma clipping on the galaxy spaxels.  For a given slice, this code runs through the
+S/N layer maps defined in a previous script and sigma clips each S/N layer separately.
+Then, it adds them all together and that final added-together slice is the layered
+clipping completed for that slice of the cube.
+
+The process then repeats itself for each slice.
 
 
-NOTES:
-    
-    THERE IS STILL SOME UPDATING NEEDED, SOME PIXELS AREN'T PROPERLY
-    REPLACING THE VALUES.  Overall, though, it does work!!
+
+
+NOTES:  Some fine-tuning still needed; likely in the S/N contour layer phase.
+        Overall, though, it does work!
 
 
 '''
@@ -16,7 +24,6 @@ __email__ = 'astro.hutchison@gmail.com'
 
 import time
 import matplotlib.pyplot as plt
-from matplotlib.colors import LogNorm
 import matplotlib.gridspec as gridspec
 from fitting_ifu_spectra import * # written by TAH
 
@@ -31,7 +38,7 @@ sigma = 5
 
 # returns dictionary of info for chosen galaxy
 # also path to reduced FITS cubes
-galaxy, path, grating = get_galaxy_info(target)#,grat='g395h')
+galaxy, path, grating = get_galaxy_info(target,grat='g395h')
 
 
 
@@ -538,13 +545,15 @@ plt.close('all')
 # using the header from the reduced s3d cube to preserve WCS & wavelength
 # -----------------------------
 if saveit == True:
+    pieces_path = 'plots-data/data-reduction/sigma-clipping-pieces/'
+    
     hdu = fits.PrimaryHDU(header=header)
     hdu1 = fits.ImageHDU(data_clipped,header=header) # the data cube
     hdu2 = fits.ImageHDU(error_clipped,header=header) # the error cube
     hdu3 = fits.ImageHDU(clipped_pixels,header=header) # the clipped pixels logging
     hdul = fits.HDUList([hdu, hdu1, hdu2, hdu3])
-    hdul.writeto(f'plots-data/testing-{name}-galaxy-{grating}.fits',overwrite=True)
-    # hdul.writeto(f'plots-data/test-{name}-sigmaclipped-s3d-galaxy-{grating}.fits',overwrite=True)
+    hdul.writeto(f'{pieces_path}/{name}-sigmaclipping-galaxy-{grating}-s3d.fits',overwrite=True)
+    pieces_path = 'plots-data/data-reduction/sigma-clipping-pieces/'
     print('\nsigma clipped FITS cube saved.  Exiting script...',end='\n\n')
     
     
