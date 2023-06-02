@@ -20,7 +20,7 @@ from fitting_ifu_spectra import * # written by TAH
 
 # specify which galaxy
 # --------------------
-target = 'SGAS1723'
+target = 'SPT2147'
 
 saveit = True # True or False
 sigma = 5
@@ -28,7 +28,7 @@ sigma = 5
 
 # returns dictionary of info for chosen galaxy
 # also path to reduced FITS cubes
-galaxy, path, grating = get_galaxy_info(target,grat='g395h')
+galaxy, path, grating = get_galaxy_info(target)#,grat='g395h')
 
 
 # since updated pmap:
@@ -42,9 +42,19 @@ scale,z = galaxy['grating'][grating]['scale']/pmap_scale, galaxy['z']
 
 x,y = galaxy['grating'][grating]['x,y']
 
-sli = 674 # for SGAS1723, not an emission line
+
+
+# before & after NSClean
+# filename = 'testing-nsclean-not/pmap1084-88/Level3_SGAS1723_g140h-f100lp_s3d_nsclean.fits'
+# filename = 'testing-nsclean-not/pmap1084-88/Level3_SGAS1723_g140h-f100lp_s3d_orig.fits'
+# filename = 'testing-nsclean-not/pmap1084-88/Level3_SGAS1723_g395h-f290lp_s3d_nsclean.fits'
+# filename = 'testing-nsclean-not/pmap1084-88/Level3_SGAS1723_g395h-f290lp_s3d_orig.fits'
+
+
+
+# sli = 674 # for SGAS1723, not an emission line
 # sli = 300 # for SPT2147, not an emission line
-# sli = galaxy['grating'][grating]['slice']
+sli = galaxy['grating'][grating]['slice']
 
 
 if name == 'SGAS1723' and grating == 'g140h':
@@ -85,7 +95,7 @@ slice_1 = data[sli].copy()
 plt.figure(figsize=(8,6))
 
 # plt.imshow(slice_1,clim=(1e-10*pmap_scale,5e-2*pmap_scale),origin='lower',
-plt.imshow(slice_1,clim=(-5e-3*pmap_scale,1e-2*pmap_scale),origin='lower',
+plt.imshow(slice_1,clim=(-5e-3*pmap_scale,5e-2*pmap_scale),origin='lower',
             cmap='viridis')#,norm=LogNorm())
 
 plt.scatter(x,y,s=40,edgecolor='k',color='C0',lw=1.5) # good pixel
@@ -178,10 +188,12 @@ plt.close('all')
 
 # sigma clipping NOT the galaxy
 
-mask = get_mask(name,array_2d=True) # want the 2D array, not coord list
+# mask = get_mask(name,array_2d=True) # want the 2D array, not coord list
+mask, mask_info = get_mask(name,array_2d=True,layers=True)#,grating='g395h')
+full_mask = mask[0].copy()
 
 masked_slice = slice_1.copy()
-masked_slice[mask>0] = np.nan
+masked_slice[full_mask>0] = np.nan
 
 
 
@@ -250,8 +262,8 @@ for i in range(len(data_clipped)):
     error_slice = error[i].copy()
 
     # first, masking out galaxy spaxels
-    data_slice[mask>0] = np.nan
-    error_slice[mask>0] = np.nan
+    data_slice[full_mask>0] = np.nan
+    error_slice[full_mask>0] = np.nan
     
     mask_data_slice = data_slice.copy()
     mask_error_slice = error_slice.copy()
@@ -270,7 +282,7 @@ for i in range(len(data_clipped)):
 
             clip_mask = sigma_clip(mask_data_slice, sigma=sigma, maxiters=5).mask
 
-        clip_mask[mask>0] = False # re-masking out the galaxy
+        clip_mask[full_mask>0] = False # re-masking out the galaxy
 
         # replaced flagged things with nanmedian (WAS nanmean)
         mask_data_slice[clip_mask] = np.nanmedian(mask_data_slice)

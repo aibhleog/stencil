@@ -30,7 +30,7 @@ from fitting_ifu_spectra import * # written by TAH
 
 # specify which galaxy
 # --------------------
-target = 'SGAS1723'
+target = 'SPT0418'
 
 saveit = True # True or False
 sigma = 5
@@ -38,7 +38,7 @@ sigma = 5
 
 # returns dictionary of info for chosen galaxy
 # also path to reduced FITS cubes
-galaxy, path, grating = get_galaxy_info(target,grat='g395h')
+galaxy, path, grating = get_galaxy_info(target)#,grat='g395h')
 
 
 
@@ -52,9 +52,23 @@ name,filename = galaxy['name'],galaxy['grating'][grating]['filename']
 scale,z = galaxy['grating'][grating]['scale']/pmap_scale, galaxy['z']
 
 x,y = galaxy['grating'][grating]['x,y']
+# x,y = 13,26
+
+
+
+# before & after NSClean
+# filename = 'testing-nsclean-not/pmap1084-88/Level3_SGAS1723_g140h-f100lp_s3d_nsclean.fits'
+# filename = 'testing-nsclean-not/pmap1084-88/Level3_SGAS1723_g140h-f100lp_s3d_orig.fits'
+# filename = 'testing-nsclean-not/pmap1084-88/Level3_SGAS1723_g395h-f290lp_s3d_nsclean.fits'
+# filename = 'testing-nsclean-not/pmap1084-88/Level3_SGAS1723_g395h-f290lp_s3d_orig.fits'
+
+
 
 # sli = 674 # not an emission line
-sli = galaxy['grating'][grating]['slice']
+# sli = galaxy['grating'][grating]['slice']
+# sli = 547
+# sli = 29
+sli = 152
 
 
 if name == 'SGAS1723' and grating == 'g140h':
@@ -324,7 +338,7 @@ colors = [cmap(j) for j in np.linspace(0,0.7,len(levels))]
 
 # plotting contours
 contours = ax.contour(g[0],g[1],snr_map, levels, origin='upper',alpha=0.6,linewidths=3,colors=colors)
-plt.clabel(contours, inline=True, fontsize=14,colors='k')
+# plt.clabel(contours, inline=True, fontsize=14,colors='k')
 
 
 
@@ -527,7 +541,7 @@ colors = [cmap(j) for j in np.linspace(0,0.7,len(levels))]
 
 # plotting contours
 contours = ax.contour(g[0],g[1],snr_map, levels, origin='upper',alpha=0.6,linewidths=3,colors=colors)
-plt.clabel(contours, inline=True, fontsize=14,colors='k')
+# plt.clabel(contours, inline=True, fontsize=14,colors='k')
 
 
 
@@ -553,7 +567,7 @@ if saveit == True:
     hdu3 = fits.ImageHDU(clipped_pixels,header=header) # the clipped pixels logging
     hdul = fits.HDUList([hdu, hdu1, hdu2, hdu3])
     hdul.writeto(f'{pieces_path}/{name}-sigmaclipping-galaxy-{grating}-s3d.fits',overwrite=True)
-    pieces_path = 'plots-data/data-reduction/sigma-clipping-pieces/'
+    
     print('\nsigma clipped FITS cube saved.  Exiting script...',end='\n\n')
     
     

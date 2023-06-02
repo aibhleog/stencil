@@ -21,14 +21,14 @@ from fitting_ifu_spectra import * # written by TAH
 
 # specify which galaxy
 # --------------------
-target = 'SGAS1723'
+target = 'SPT2147'
 
 saveit = True # True or False
 
 
 # returns dictionary of info for chosen galaxy
 # also path to reduced FITS cubes
-galaxy, path, grating = get_galaxy_info(target,grat='g395h')
+galaxy, path, grating = get_galaxy_info(target)#,grat='g395h')
 
 
 # since updated pmap:
@@ -46,7 +46,8 @@ sli = galaxy['grating'][grating]['slice']
 
 
 # getting mask
-mask = get_mask(name,array_2d=True)
+mask, mask_info = get_mask(name,array_2d=True,layers=True)#,grating='g395h')
+full_mask = mask[0].copy()
 
 
 
@@ -84,26 +85,26 @@ for i in range(len(bkgd)):
     gal_slice_error = gal_err[i].copy()
     
     # just to be safe, masking out bkgd, galaxy
-    bkgd_slice[mask>0] = np.nan
-    gal_slice[mask<1] = np.nan
+    bkgd_slice[full_mask>0] = np.nan
+    gal_slice[full_mask<1] = np.nan
     
-    bkgd_slice_error[mask>0] = np.nan
-    gal_slice_error[mask<1] = np.nan
+    bkgd_slice_error[full_mask>0] = np.nan
+    gal_slice_error[full_mask<1] = np.nan
     
     # pieceing together
     filler_slice = bkgd_slice.copy()
     filler_slice_error = bkgd_slice_error.copy()
     
-    filler_slice[mask>0] = gal_slice[mask>0].copy()
-    filler_slice_error[mask>0] = gal_slice_error[mask>0].copy()
+    filler_slice[full_mask>0] = gal_slice[full_mask>0].copy()
+    filler_slice_error[full_mask>0] = gal_slice_error[full_mask>0].copy()
     
     # adding to new cube
     final_clipped[i] = filler_slice.copy()
     final_clipped_error[i] = filler_slice_error.copy()
 
     # adding together the clipped pixel tracker cubes
-    clipped_pixels[i][mask<1] = bkgd_clipped[i][mask<1].copy()
-    clipped_pixels[i][mask>0] = gal_clipped[i][mask>0].copy()
+    clipped_pixels[i][full_mask<1] = bkgd_clipped[i][full_mask<1].copy()
+    clipped_pixels[i][full_mask>0] = gal_clipped[i][full_mask>0].copy()
     
 
     
@@ -139,7 +140,7 @@ ax.set_xticklabels([])
 # slice from clipping pixel tracker
 ax = plt.subplot(gs[2])
 ax.set_title('pixels clipped in slice')
-ax.imshow(mask,origin='lower',cmap='Greys',zorder=0,alpha=0.3)
+ax.imshow(full_mask,origin='lower',cmap='Greys',zorder=0,alpha=0.3)
 ax.imshow(clipped_pixels[sli],origin='lower',cmap='Blues',alpha=0.5)
 ax.text(0.047,0.927,'galaxy mask',color='grey',transform=ax.transAxes,fontsize=13)
 ax.text(0.047,0.87,'clipped pixel',color='C0',transform=ax.transAxes,fontsize=13,alpha=0.8)
@@ -158,7 +159,7 @@ print(end='\n\n')
 # BEFORE & AFTER STATS
 print('Stats for the galaxy spaxels, before & after clipping:',end='\n\n')
 for d in [data[sli].copy(),final_clipped[sli].copy()]:
-    d[mask<1] = np.nan
+    d[full_mask<1] = np.nan
     print('Median:',np.nanmedian(d))
     print('Mean:',np.nanmean(d))
     print('Standard Deviation:',np.nanstd(d))
@@ -167,7 +168,7 @@ for d in [data[sli].copy(),final_clipped[sli].copy()]:
     
 print('Stats for the off-galaxy spaxels, before & after clipping:',end='\n\n')
 for d in [data[sli].copy(),final_clipped[sli].copy()]:
-    d[mask>0] = np.nan
+    d[full_mask>0] = np.nan
     print('Median:',np.nanmedian(d))
     print('Mean:',np.nanmean(d))
     print('Standard Deviation:',np.nanstd(d))
@@ -190,10 +191,51 @@ if saveit == True:
     hdu2 = fits.ImageHDU(final_clipped_error,header=header) # the error cube
     hdu3 = fits.ImageHDU(clipped_pixels,header=header) # the clipped pixel tracker
     hdul = fits.HDUList([hdu, hdu1, hdu2, hdu3])
-    hdul.writeto(f'plots-data/{name}-sigmaclipped-{grating}-s3d.fits',overwrite=True)
-    print('\nsigma clipped FITS cube saved.  Exiting script...',end='\n\n')
     
+    hdul.writeto(f'plots-data/{name}-sigmaclipped-{grating}-s3d.fits',overwrite=True)
+    # hdul.writeto(f'plots-data/testing-{name}-sigmaclipped-{grating}-s3d.fits',overwrite=True) # testing before & after nsclean
+    
+    print('\nsigma clipped FITS cube saved.  Exiting script...',end='\n\n')
     
     
 
     
+    
+sys.exit(0)
+
+
+
+def check_slice(sli):
+
+    plt.figure(figsize=(12,6))
+    gs = gridspec.GridSpec(1,3,width_ratios=[1,1,1],wspace=0)
+
+    ax = plt.subplot(gs[0])
+    ax.set_title('original slice')
+    ax.imshow(data[sli],clim=(-5e-3*pmap_scale,5e-2*pmap_scale),origin='lower',
+               cmap='viridis')
+
+    ax.set_yticklabels([])
+    ax.set_xticklabels([])
+
+    ax = plt.subplot(gs[1])
+    ax.set_title('layered sigma clipped slice')
+    ax.imshow(final_clipped[sli],clim=(-5e-3*pmap_scale,5e-2*pmap_scale),origin='lower',
+               cmap='viridis')
+
+    ax.set_yticklabels([])
+    ax.set_xticklabels([])
+
+    ax = plt.subplot(gs[2])
+    ax.set_title('pixels clipped in slice')
+    ax.imshow(full_mask,origin='lower',cmap='Greys',zorder=0,alpha=0.3)
+    ax.imshow(clipped_pixels[sli],origin='lower',cmap='Blues',alpha=0.5)
+    ax.text(0.047,0.927,'galaxy mask',color='grey',transform=ax.transAxes,fontsize=13)
+    ax.text(0.047,0.87,'clipped pixel',color='C0',transform=ax.transAxes,fontsize=13,alpha=0.8)
+
+    ax.set_yticklabels([])
+    ax.set_xticklabels([])
+
+    plt.tight_layout()
+    plt.show()
+    plt.close('all')
