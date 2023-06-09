@@ -82,7 +82,7 @@ def get_coords(cube_shape):
         
         
         
-def get_mask(galaxy,array_2d=False,layers=False,grating=False):
+def get_mask(galaxy,array_2d=False,layers=False,grating=False,lens=False):
     '''
     INPUTS:
     >> galaxy -------- the name of the galaxy mask I want
@@ -91,11 +91,19 @@ def get_mask(galaxy,array_2d=False,layers=False,grating=False):
     >> coordinates --- a list of coordinates from the mask,
                        specifying where the galaxy light is
     '''
+    
+    extra = '' # makes it easier to include or not include lens suffix
+    # For the rare cases I want the lens, too
+    if lens == True:
+        if galaxy == 'SPT0418': extra = '-lens-companion'
+        elif galaxy == 'SPT2147': extra = '-lens'
+    
+    
     # just the full galaxy mask
     if layers == False:
         try:
-            galaxy_mask = fits.getdata(f'plots-data/{galaxy}-mask.fits')
-            
+            galaxy_mask = fits.getdata(f'plots-data/{galaxy}-mask{extra}.fits')
+
             if galaxy == 'SGAS1723' and grating == 'g395h':
                 galaxy_mask = fits.getdata(f'plots-data/{galaxy}-mask-{grating}.fits')
 
@@ -114,12 +122,17 @@ def get_mask(galaxy,array_2d=False,layers=False,grating=False):
     # note that the first slice is the full galaxy mask
     else:
         try:
-            galaxy_mask = fits.getdata(f'plots-data/{galaxy}-mask-layers.fits')
-            mask_layers_info = np.loadtxt(f'plots-data/{galaxy}-mask-layers.txt',delimiter='\t')
+            filename = f'plots-data/{galaxy}-mask-layers{extra}.fits'
+            
+            if galaxy == 'SGAS1723' and grating == 'g395h':
+                filename = f'plots-data/{galaxy}-mask-layers-{grating}.fits'
+            
+            galaxy_mask = fits.getdata(filename)
+            mask_layers_info = np.loadtxt(f'{filename[:-5]}.txt',delimiter='\t')
             
             mask_layers = []
-            
-            with fits.open(f'plots-data/{galaxy}-mask-layers.fits') as hdul:
+                
+            with fits.open(filename) as hdul:
                 for i in range(len(hdul)):
                     # map layer
                     galaxy_mask = hdul[i].data

@@ -38,7 +38,7 @@ import json, sys
 
 # specify which galaxy
 # --------------------
-target = 'SPT2147'
+target = 'SGAS1723'
 
 saveit = True # save the figure?
 
@@ -157,11 +157,11 @@ wave = np.arange(header['CRVAL3'],
 count = 0
 
 plt.figure(figsize=(15,8))
-gs0 = gridspec.GridSpec(1,2,width_ratios=[1.95,2])
+gs0 = gridspec.GridSpec(1,2,width_ratios=[1.95,2],wspace=0)
 
 
 gsL = gridspec.GridSpecFromSubplotSpec(3,1,subplot_spec=gs0[0],
-								height_ratios=[1,3,1],hspace=0)
+								height_ratios=[1,8,1],hspace=0)
 
 gsR = gridspec.GridSpecFromSubplotSpec(4,1,subplot_spec=gs0[1],
 								height_ratios=[1,1,1,1],hspace=0)
@@ -182,15 +182,15 @@ cmap = plt.get_cmap('viridis')
 colors = [cmap(j) for j in np.linspace(0,0.8,4)]
 
 if target == 'SPT0418':
-    pixels = [[14,31],[6,14],[28,12],[36,28]]
+    pixels = [[15,31],[6,13],[28,12],[36,28]]
 elif target == 'SGAS1723':
-    pixels = [[20,44],[22,37],[30,25],[35,18]]
+    pixels = [[20,44],[22,36],[29,24],[35,17]]
 elif target == 'SPT2147':
-    pixels = [[14,25],[18,26],[29,10],[39,29]]
+    pixels = [[14,25],[18,27],[29,10],[39,29]]
     
 
     
-scale /= 1e3 
+if target[:3] == 'SPT': scale /= 1e3 
 
 
 for x,y in pixels:
@@ -229,10 +229,10 @@ for x,y in pixels:
         for l in [.4863,.4959,.5007]: #,.5876,.654981,.65628,.658523]:
             ax.axvline(l*(1+z),color='k',ls=':')
         
-        ax.set_xlim(1.1,1.2)
         # ax.set_xlim(1.1,1.2)
-        # ax.set_xlim(1.45,1.6)
-        ax.set_ylim(-0.2,2.3)
+        # ax.set_xlim(1.1,1.2)
+        ax.set_xlim(1.5,1.58)
+        ax.set_ylim(-0.2,2)
         ax.set_yticklabels([])
     
     elif target == 'SPT0418':
@@ -254,7 +254,8 @@ for x,y in pixels:
         
     # adding lines  
     if count == 1:
-        add_lines.draw_lines(ax,2.5,z,xlim=['nii1','sii'],xo=12,
+        if target[:3] == 'SPT':
+            add_lines.draw_lines(ax,2.5,z,xlim=['nii1','sii'],xo=12,
                              fontsize=13,alpha=0.8)
         
     if count != 3:

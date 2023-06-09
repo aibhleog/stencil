@@ -30,7 +30,7 @@ from fitting_ifu_spectra import * # written by TAH
 
 # specify which galaxy
 # --------------------
-target = 'SPT0418'
+target = 'SGAS1723'
 
 saveit = True # True or False
 sigma = 5
@@ -66,9 +66,12 @@ x,y = galaxy['grating'][grating]['x,y']
 
 # sli = 674 # not an emission line
 # sli = galaxy['grating'][grating]['slice']
+# sli = 2618
+# sli = 730 # for sgas1723 gratingg g140
+sli = 707
 # sli = 547
 # sli = 29
-sli = 152
+# sli = 152
 
 
 if name == 'SGAS1723' and grating == 'g140h':
@@ -106,7 +109,7 @@ slice_1err = error[sli].copy()
 
 
 # getting masking layers & info
-mask, mask_info = get_mask(name,array_2d=True,layers=True)#,grating='g395h')
+mask, mask_info = get_mask(name,array_2d=True,layers=True,grating='g395h')
 full_mask = mask[0].copy()
 
 
@@ -343,12 +346,13 @@ contours = ax.contour(g[0],g[1],snr_map, levels, origin='upper',alpha=0.6,linewi
 
 
 plt.tight_layout()
-plt.show()
+# plt.show()
 plt.close('all')
 
 
 
 # sys.exit(0)
+
 
 
 
@@ -391,6 +395,7 @@ for s in range(len(data_clipped)):
             clipped_pixels_layers = []
             
             for j in range(len(mask)-1):
+                
                 # setting up slice and layer
                 masked_slice_layer = mask_data_slice.copy()
                 masked_slice_layer[mask[j+1]<1] = np.nan # one layer at a time
@@ -401,7 +406,6 @@ for s in range(len(data_clipped)):
                 
                 # for the clipped pixel tracker, too
                 masked_clipped_pixels = np.zeros(masked_slice_layer.shape)
-                
 
                 # sigma clipped LAYER in slice
                 clip_mask = sigma_clip(masked_slice_layer, sigma=sigma, maxiters=5).mask
@@ -498,7 +502,7 @@ gs = gridspec.GridSpec(1,2,width_ratios=[1,1.25],wspace=0)
 
 ax = plt.subplot(gs[0])
 
-ax.imshow(masked_slice,clim=(-5e-3*pmap_scale,5e-2*pmap_scale),origin='lower',
+ax.imshow(masked_slice,origin='lower',clim=(-5e-3*pmap_scale,5e-2*pmap_scale),
            cmap='viridis')#,norm=LogNorm())
 
 ax.scatter(x,y,s=40,edgecolor='k',color='C0',lw=1.5) # good pixel
@@ -513,7 +517,7 @@ ax.set_xticklabels([])
 
 ax = plt.subplot(gs[1])
 
-im = ax.imshow(data_clipped[sli],clim=(-5e-3*pmap_scale,5e-2*pmap_scale),origin='lower',
+im = ax.imshow(data_clipped[sli],origin='lower',clim=(-5e-3*pmap_scale,5e-2*pmap_scale),
            cmap='viridis')#,norm=LogNorm())
 cbar = plt.colorbar(im)
 
@@ -522,26 +526,26 @@ ax.set_yticklabels([])
 ax.set_xticklabels([])
 
 
-if target == 'SGAS1723': 
-    levels = np.array([18,55,150]) # S/N levels
-    maxsnr = 300
+# if target == 'SGAS1723': 
+#     levels = np.array([18,55,150]) # S/N levels
+#     maxsnr = 300
 
-if target == 'SGAS1226': 
-    levels = np.array([15,25]) # S/N levels
-    maxsnr = 45
+# if target == 'SGAS1226': 
+#     levels = np.array([15,25]) # S/N levels
+#     maxsnr = 45
 
-# making list of spaxel coordinates based on data shape
-snr_map = slice_1.copy() / slice_1err.copy()
-x0,y0 = np.arange(0,snr_map.shape[1]),np.arange(0,snr_map.shape[0])
-g = np.meshgrid(x0,y0)
+# # making list of spaxel coordinates based on data shape
+# snr_map = slice_1.copy() / slice_1err.copy()
+# x0,y0 = np.arange(0,snr_map.shape[1]),np.arange(0,snr_map.shape[0])
+# g = np.meshgrid(x0,y0)
     
-# making array colors
-cmap = plt.get_cmap('Blues_r')
-colors = [cmap(j) for j in np.linspace(0,0.7,len(levels))]
+# # making array colors
+# cmap = plt.get_cmap('Blues_r')
+# colors = [cmap(j) for j in np.linspace(0,0.7,len(levels))]
 
-# plotting contours
-contours = ax.contour(g[0],g[1],snr_map, levels, origin='upper',alpha=0.6,linewidths=3,colors=colors)
-# plt.clabel(contours, inline=True, fontsize=14,colors='k')
+# # plotting contours
+# contours = ax.contour(g[0],g[1],snr_map, levels, origin='upper',alpha=0.6,linewidths=3,colors=colors)
+# # plt.clabel(contours, inline=True, fontsize=14,colors='k')
 
 
 

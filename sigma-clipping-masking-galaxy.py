@@ -20,7 +20,7 @@ from fitting_ifu_spectra import * # written by TAH
 
 # specify which galaxy
 # --------------------
-target = 'SPT2147'
+target = 'SGAS1723'
 
 saveit = True # True or False
 sigma = 5
@@ -28,7 +28,7 @@ sigma = 5
 
 # returns dictionary of info for chosen galaxy
 # also path to reduced FITS cubes
-galaxy, path, grating = get_galaxy_info(target)#,grat='g395h')
+galaxy, path, grating = get_galaxy_info(target,grat='g395h')
 
 
 # since updated pmap:
@@ -74,7 +74,7 @@ elif name == 'SPT2147':
     x_n,y_n = 33,8 # bkgd spaxel
     x_b,y_b = 8,30 # -bad spaxel
 elif name == 'SGAS1226':
-    x_c,y_c = 26,36 # +bad spaxel
+    x_c,y_c = 21,36 # +bad spaxel
     x_n,y_n = 39,7 # bkgd spaxel
     x_b,y_b = 7,30 # -bad spaxel
 
@@ -189,7 +189,7 @@ plt.close('all')
 # sigma clipping NOT the galaxy
 
 # mask = get_mask(name,array_2d=True) # want the 2D array, not coord list
-mask, mask_info = get_mask(name,array_2d=True,layers=True)#,grating='g395h')
+mask, mask_info = get_mask(name,array_2d=True,layers=True,grating='g395h')
 full_mask = mask[0].copy()
 
 masked_slice = slice_1.copy()

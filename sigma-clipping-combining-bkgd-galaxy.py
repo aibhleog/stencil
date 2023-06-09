@@ -21,7 +21,7 @@ from fitting_ifu_spectra import * # written by TAH
 
 # specify which galaxy
 # --------------------
-target = 'SPT2147'
+target = 'SGAS1723'
 
 saveit = True # True or False
 
