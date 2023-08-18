@@ -23,12 +23,14 @@ from fitting_ifu_spectra import * # written by TAH
 # --------------------
 target = 'SGAS1723'
 
-saveit = True # True or False
+saveit = False # True or False
 
 
 # returns dictionary of info for chosen galaxy
 # also path to reduced FITS cubes
 galaxy, path, grating = get_galaxy_info(target)#,grat='g395h')
+
+endname = '' #'-nsclean'
 
 
 # since updated pmap:
@@ -42,7 +44,8 @@ scale,z = galaxy['grating'][grating]['scale']/pmap_scale, galaxy['z']
 
 # sli = 674 # SGAS1723, not an emission line
 # sli = 300 # SPT2147, not an emission line
-sli = galaxy['grating'][grating]['slice'] 
+# sli = galaxy['grating'][grating]['slice'] 
+sli = 1608-16 # for plotting
 
 
 # getting mask
@@ -55,12 +58,12 @@ full_mask = mask[0].copy()
 # --(yes this seems a tedious way to read them in, but I'm lazy and this was faster)
 pieces_path = 'plots-data/data-reduction/sigma-clipping-pieces/'
 
-bkgd = fits.getdata(f'{pieces_path}/{name}-sigmaclipping-bkgd-{grating}-s3d.fits')
-bkgd_err = fits.getdata(f'{pieces_path}/{name}-sigmaclipping-bkgd-{grating}-s3d.fits',ext=2)
-bkgd_clipped = fits.getdata(f'{pieces_path}/{name}-sigmaclipping-bkgd-{grating}-s3d.fits',ext=3)
-gal = fits.getdata(f'{pieces_path}/{name}-sigmaclipping-galaxy-{grating}-s3d.fits')
-gal_err = fits.getdata(f'{pieces_path}/{name}-sigmaclipping-galaxy-{grating}-s3d.fits',ext=2)
-gal_clipped = fits.getdata(f'{pieces_path}/{name}-sigmaclipping-galaxy-{grating}-s3d.fits',ext=3)
+bkgd = fits.getdata(f'{pieces_path}/{name}-sigmaclipping-bkgd-{grating}-s3d{endname}.fits')
+bkgd_err = fits.getdata(f'{pieces_path}/{name}-sigmaclipping-bkgd-{grating}-s3d{endname}.fits',ext=2)
+bkgd_clipped = fits.getdata(f'{pieces_path}/{name}-sigmaclipping-bkgd-{grating}-s3d{endname}.fits',ext=3)
+gal = fits.getdata(f'{pieces_path}/{name}-sigmaclipping-galaxy-{grating}-s3d{endname}.fits')
+gal_err = fits.getdata(f'{pieces_path}/{name}-sigmaclipping-galaxy-{grating}-s3d{endname}.fits',ext=2)
+gal_clipped = fits.getdata(f'{pieces_path}/{name}-sigmaclipping-galaxy-{grating}-s3d{endname}.fits',ext=3)
 
 
 # setting up final cubes
@@ -150,6 +153,7 @@ ax.set_xticklabels([])
 
 
 plt.tight_layout()
+# plt.savefig(f'plots-data/data-reduction/pasp-before-after-2D.pdf')
 plt.show()
 plt.close('all')
 print(end='\n\n')
@@ -192,7 +196,8 @@ if saveit == True:
     hdu3 = fits.ImageHDU(clipped_pixels,header=header) # the clipped pixel tracker
     hdul = fits.HDUList([hdu, hdu1, hdu2, hdu3])
     
-    hdul.writeto(f'plots-data/{name}-sigmaclipped-{grating}-s3d.fits',overwrite=True)
+    hdul.writeto(f'{path}{name}/testing-nsclean-not/pmap1084-88/{name}-sigmaclipped-{grating}-s3d{endname}.fits',overwrite=True)
+    # hdul.writeto(f'plots-data/{name}-sigmaclipped-{grating}-s3d{endname}.fits',overwrite=True)
     # hdul.writeto(f'plots-data/testing-{name}-sigmaclipped-{grating}-s3d.fits',overwrite=True) # testing before & after nsclean
     
     print('\nsigma clipped FITS cube saved.  Exiting script...',end='\n\n')

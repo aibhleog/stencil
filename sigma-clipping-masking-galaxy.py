@@ -28,8 +28,10 @@ sigma = 5
 
 # returns dictionary of info for chosen galaxy
 # also path to reduced FITS cubes
-galaxy, path, grating = get_galaxy_info(target,grat='g395h')
+galaxy, path, grating = get_galaxy_info(target)#,grat='g140h')
 
+
+endname = '' #'-nsclean'
 
 # since updated pmap:
 pmap_scale = 1e2 # was 1e4 for pmap1027 with old pipeline version
@@ -189,7 +191,7 @@ plt.close('all')
 # sigma clipping NOT the galaxy
 
 # mask = get_mask(name,array_2d=True) # want the 2D array, not coord list
-mask, mask_info = get_mask(name,array_2d=True,layers=True,grating='g395h')
+mask, mask_info = get_mask(name,array_2d=True,layers=True,grating='g140h')
 full_mask = mask[0].copy()
 
 masked_slice = slice_1.copy()
@@ -356,7 +358,7 @@ if saveit == True:
     hdu2 = fits.ImageHDU(error_clipped,header=header) # the error cube
     hdu3 = fits.ImageHDU(clipped_pixels,header=header) # the clipped pixels logging
     hdul = fits.HDUList([hdu, hdu1, hdu2, hdu3])
-    hdul.writeto(f'{pieces_path}/{name}-sigmaclipping-bkgd-{grating}-s3d.fits',overwrite=True)
+    hdul.writeto(f'{pieces_path}/{name}-sigmaclipping-bkgd-{grating}-s3d{endname}.fits',overwrite=True)
     print('\nsigma clipped FITS cube saved.  Exiting script...',end='\n\n')
     
     
