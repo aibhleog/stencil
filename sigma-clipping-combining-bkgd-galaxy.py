@@ -23,14 +23,14 @@ from fitting_ifu_spectra import * # written by TAH
 # --------------------
 target = 'SGAS1723'
 
-saveit = False # True or False
+saveit = True # True or False
 
 
 # returns dictionary of info for chosen galaxy
 # also path to reduced FITS cubes
 galaxy, path, grating = get_galaxy_info(target)#,grat='g395h')
 
-endname = '' #'-nsclean'
+endname = '-alt-outlier' #'-nsclean'
 
 
 # since updated pmap:
@@ -196,7 +196,7 @@ if saveit == True:
     hdu3 = fits.ImageHDU(clipped_pixels,header=header) # the clipped pixel tracker
     hdul = fits.HDUList([hdu, hdu1, hdu2, hdu3])
     
-    hdul.writeto(f'{path}{name}/testing-nsclean-not/pmap1084-88/{name}-sigmaclipped-{grating}-s3d{endname}.fits',overwrite=True)
+    hdul.writeto(f'{path}{name}/testing-outlier-detection/pmap1105/{name}-sigmaclipped-{grating}-s3d{endname}.fits',overwrite=True)
     # hdul.writeto(f'plots-data/{name}-sigmaclipped-{grating}-s3d{endname}.fits',overwrite=True)
     # hdul.writeto(f'plots-data/testing-{name}-sigmaclipped-{grating}-s3d.fits',overwrite=True) # testing before & after nsclean
     

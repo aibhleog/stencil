@@ -41,7 +41,7 @@ sigma = 5
 galaxy, path, grating = get_galaxy_info(target)#,grat='g395h')
 
 
-endname = '' #'-nsclean'
+endname = '-alt-outlier' #'-nsclean'
 
 
 # since updated pmap:
@@ -63,6 +63,11 @@ x,y = galaxy['grating'][grating]['x,y']
 # filename = 'testing-nsclean-not/pmap1084-88/Level3_SGAS1723_g140h-f100lp_s3d_orig.fits'
 # filename = 'testing-nsclean-not/pmap1084-88/Level3_SGAS1723_g395h-f290lp_s3d_nsclean.fits'
 # filename = 'testing-nsclean-not/pmap1084-88/Level3_SGAS1723_g395h-f290lp_s3d_orig.fits'
+
+
+# TESTING OUTLIER DETECTION STEP
+# NOW THAT IT'S "NEW AND IMPROVED"
+filename = 'testing-outlier-detection/pmap1105/Level3_SGAS1723_BGSUB_OUTLIER_g140h-f100lp_s3d.fits'
 
 
 
