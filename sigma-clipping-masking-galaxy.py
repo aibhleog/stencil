@@ -28,10 +28,10 @@ sigma = 5
 
 # returns dictionary of info for chosen galaxy
 # also path to reduced FITS cubes
-galaxy, path, grating = get_galaxy_info(target)#,grat='g140h')
+galaxy, path, grating = get_galaxy_info(target,grat='g395h')
 
 
-endname = '-alt-outlier' #'-nsclean'
+endname = '-nobg-outlier' #'-nsclean'
 
 # since updated pmap:
 pmap_scale = 1e2 # was 1e4 for pmap1027 with old pipeline version
@@ -43,6 +43,7 @@ name,filename = galaxy['name'],galaxy['grating'][grating]['filename']
 scale,z = galaxy['grating'][grating]['scale']/pmap_scale, galaxy['z']
 
 x,y = galaxy['grating'][grating]['x,y']
+filt = galaxy['grating'][grating]['filter']
 
 
 
@@ -52,10 +53,16 @@ x,y = galaxy['grating'][grating]['x,y']
 # filename = 'testing-nsclean-not/pmap1084-88/Level3_SGAS1723_g395h-f290lp_s3d_nsclean.fits'
 # filename = 'testing-nsclean-not/pmap1084-88/Level3_SGAS1723_g395h-f290lp_s3d_orig.fits'
 
+# nsclean figure for overview paper
+filename = f'testing-nsclean-not/pmap1105/Level3_SGAS1723_NOBG_OUTLIER_{grating}-{filt}_s3d.fits'
 
-# TESTING OUTLIER DETECTION STEP
-# NOW THAT IT'S "NEW AND IMPROVED"
-filename = 'testing-outlier-detection/pmap1105/Level3_SGAS1723_BGSUB_OUTLIER_g140h-f100lp_s3d.fits'
+
+# # TESTING OUTLIER DETECTION STEP
+# # NOW THAT IT'S "NEW AND IMPROVED"
+# filename = 'testing-outlier-detection/pmap1105/Level3_SGAS1723_BGSUB_OUTLIER_g140h-f100lp_s3d.fits'
+
+
+
 
 
 
